@@ -1,0 +1,127 @@
+from flask import Flask, request, jsonify
+import torch
+from PIL import Image
+import numpy as np
+import albumentations
+import os
+from datetime import datetime
+from efficientnet_pytorch import EfficientNet
+import torch.nn as nn
+import io
+import base64
+
+import os
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+try:
+    service_account_path = os.getenv("FIREBASE_KEY_PATH", "firebase-account.json")
+    cred = credentials.Certificate(service_account_path)
+    firebase_admin.initialize_app(cred)
+    print("Firebase initialized successfully.")
+except Exception as e:
+    print(f"Error initializing Firebase: {e}")
+
+# Firestore 데이터베이스 클라이언트
+db = firestore.client()
+
+# 테스트: Firestore에 데이터 쓰기
+doc_ref = db.collection("test").document("sample")
+doc_ref.set({"message": "Hello, Firebase!"})
+
+app = Flask(__name__)
+
+class MelanomaModel(nn.Module):
+    def __init__(self, model_name='efficientnet-b5', pretrained=True):
+        super(MelanomaModel, self).__init__()
+        self.model = EfficientNet.from_pretrained(model_name)
+        in_features = self.model._fc.in_features
+        self.model._fc = nn.Linear(in_features, 1)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+
+def preprocess_image(image_bytes, image_size=640):
+    transforms_val = albumentations.Compose([
+        albumentations.Resize(image_size, image_size),
+        albumentations.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+    ])
+    
+    # 바이트 스트림을 PIL 이미지로 변환
+    image = Image.open(io.BytesIO(image_bytes))
+    image = image.convert('RGB')
+    image = np.array(image)
+    augmented = transforms_val(image=image)
+    image = augmented['image']
+    image = torch.tensor(image).float().permute(2, 0, 1).unsqueeze(0)
+    return image
+
+def generate_report(image_name, probability):
+    risk_level = "고위험" if probability > 0.5 else "저위험"
+    now = datetime.now()
+    
+    report = {
+        "timestamp": now.strftime("%Y년 %m월 %d일 %H시 %M분"),
+        "image_name": image_name,
+        "melanoma_probability": f"{probability*100:.2f}%",
+        "risk_level": risk_level,
+        "assessment": "전문의의 정밀검진이 필요한 수준입니다." if probability > 0.5 else "정기적인 관찰이 권장됩니다.",
+        "notice": [
+            "이 결과는 AI 분석 결과이며, 참고용으로만 사용해야 합니다.",
+            "정확한 진단을 위해서는 반드시 전문의와 상담하시기 바랍니다.",
+            "피부의 변화가 있을 경우 정기적인 검진을 권장합니다."
+        ]
+    }
+    return report
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy", "message": "Server is running"}), 200
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    if 'image' not in request.files:
+        return jsonify({'error': '이미지 파일이 필요합니다.'}), 400
+    
+    try:
+        image_file = request.files['image']
+        image_bytes = image_file.read()
+        
+        # 이미지 전처리
+        image = preprocess_image(image_bytes)
+        image = image.to(device)
+        
+        # 예측 수행
+        with torch.no_grad():
+            prediction = torch.sigmoid(model(image))
+            probability = prediction.item()        
+    
+
+        # 결과 리포트 생성
+        report = generate_report(image_file.filename, probability)
+        
+        return jsonify({
+            'success': True,
+            'report': report
+        }), 200
+        
+    except FileNotFoundError as e:
+        return jsonify({'error': '모델 파일을 찾을 수 없습니다.', 'details': str(e)}), 500
+    except Exception as e:
+        return jsonify({'error': '예측 중 문제가 발생했습니다.', 'details': str(e)}), 500
+
+if __name__ == '__main__':
+    # 모델 및 디바이스 초기화
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    model = MelanomaModel('efficientnet-b5')
+    model_path = 'model/4c_b5ns_1.5e_640_ext_15ep_best_fold0.pth'
+    
+    # 모델 가중치 로드
+    state_dict = torch.load(model_path, map_location=device)
+    model.load_state_dict(state_dict, strict=False)
+    model.to(device)
+    model.eval()
+    
+    print(f"Model loaded successfully. Using device: {device}")
+    app.run(host='0.0.0.0', port=5000, debug=False)
