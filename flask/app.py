@@ -10,25 +10,6 @@ import torch.nn as nn
 import io
 import base64
 
-import os
-import firebase_admin
-from firebase_admin import credentials, firestore
-
-try:
-    service_account_path = os.getenv("FIREBASE_KEY_PATH", "firebase-account.json")
-    cred = credentials.Certificate(service_account_path)
-    firebase_admin.initialize_app(cred)
-    print("Firebase initialized successfully.")
-except Exception as e:
-    print(f"Error initializing Firebase: {e}")
-
-# Firestore 데이터베이스 클라이언트
-db = firestore.client()
-
-# 테스트: Firestore에 데이터 쓰기
-doc_ref = db.collection("test").document("sample")
-doc_ref.set({"message": "Hello, Firebase!"})
-
 app = Flask(__name__)
 
 class MelanomaModel(nn.Module):
