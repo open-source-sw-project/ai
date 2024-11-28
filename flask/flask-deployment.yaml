@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: handoc-flask-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: handoc-flask
+  template:
+    metadata:
+      labels:
+        app: handoc-flask
+    spec:
+      containers:
+      - name: handoc-flask
+        image: 2jay0/handoc-flask:v1
+        ports:
+        - containerPort: 5000
+        env:
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: handoc-flask-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 5000
+  selector:
+    app: handoc-flask
