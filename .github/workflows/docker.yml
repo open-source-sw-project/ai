@@ -19,7 +19,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./flask
+          file: ./flask/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/handoc-flask:latest
 
