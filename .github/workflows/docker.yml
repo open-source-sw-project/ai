@@ -1,9 +1,11 @@
 name: Docker Build and api-Test
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - master
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 jobs:
   build-and-push:
