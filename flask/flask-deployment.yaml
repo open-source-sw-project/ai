@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: handoc-flask
-        image: 2jay0/handoc-flask:v1
+        image: 2jay0/handoc-flask:latest
         ports:
         - containerPort: 5000
         env:
