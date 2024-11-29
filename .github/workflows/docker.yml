@@ -37,4 +37,4 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests pytest
       - name: Run API tests
-        run: python -m pytest ./test/test_api.py -v
+        run: python -m pytest ./flask/test/test_api.py -v
