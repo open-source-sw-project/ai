@@ -8,7 +8,7 @@ from datetime import datetime
 from efficientnet_pytorch import EfficientNet
 import torch.nn as nn
 import io
-import base64
+import sys
 
 app = Flask(__name__)
 
@@ -20,8 +20,7 @@ class MelanomaModel(nn.Module):
         self.model._fc = nn.Linear(in_features, 1)
         
     def forward(self, x):
-        x = self.model(x)
-        return x
+        return self.model(x)
 
 def preprocess_image(image_bytes, image_size=640):
     transforms_val = albumentations.Compose([
@@ -29,9 +28,7 @@ def preprocess_image(image_bytes, image_size=640):
         albumentations.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
     ])
     
-    # 바이트 스트림을 PIL 이미지로 변환
-    image = Image.open(io.BytesIO(image_bytes))
-    image = image.convert('RGB')
+    image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
     image = np.array(image)
     augmented = transforms_val(image=image)
     image = augmented['image']
@@ -76,9 +73,8 @@ def predict():
         # 예측 수행
         with torch.no_grad():
             prediction = torch.sigmoid(model(image))
-            probability = prediction.item()        
-    
-
+            probability = prediction.item()
+        
         # 결과 리포트 생성
         report = generate_report(image_file.filename, probability)
         
@@ -92,17 +88,25 @@ def predict():
     except Exception as e:
         return jsonify({'error': '예측 중 문제가 발생했습니다.', 'details': str(e)}), 500
 
+def load_model(model_path, device):
+    try:
+        state_dict = torch.load(model_path, map_location=device)
+        model.load_state_dict(state_dict, strict=False)
+        model.to(device)
+        model.eval()
+        print(f"Model loaded successfully. Using device: {device}")
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        sys.exit(1)
+
 if __name__ == '__main__':
-    # 모델 및 디바이스 초기화
+    # 환경 변수에서 모델 경로 설정
+    model_path = os.getenv('MODEL_PATH', './model/4c_b5ns_1.5e_640_ext_15ep_best_fold0.pth')
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
+    # 모델 초기화
     model = MelanomaModel('efficientnet-b5')
-    model_path = 'model/4c_b5ns_1.5e_640_ext_15ep_best_fold0.pth'
+    load_model(model_path, device)
     
-    # 모델 가중치 로드
-    state_dict = torch.load(model_path, map_location=device)
-    model.load_state_dict(state_dict, strict=False)
-    model.to(device)
-    model.eval()
-    
-    print(f"Model loaded successfully. Using device: {device}")
+    # Flask 서버 실행
     app.run(host='0.0.0.0', port=5000, debug=False)

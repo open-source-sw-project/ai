@@ -1,22 +1,32 @@
+# Base image
 FROM python:3.9-slim
 
+# Set working directory
 WORKDIR /flask
 
-# 시스템 패키지 설치
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and clean up
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libmariadb-dev \
     gcc \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Python 패키지 설치
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 애플리케이션 파일 복사
+# Copy application files
 COPY . .
 
-# 포트 노출
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    MODEL_PATH=/flask/model/4c_b5ns_1.5e_640_ext_15ep_best_fold0.pth
+
+# Expose the application port
 EXPOSE 5000
 
-# 애플리케이션 실행
+# Healthcheck for container
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:5000/health || exit 1
+
+# Command to run the application
 CMD ["python", "app.py"]
