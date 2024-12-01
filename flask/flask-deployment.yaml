@@ -26,18 +26,18 @@ spec:
               fieldPath: metadata.name
         - name: MODEL_PATH
           value: "/flask/model/4c_b5ns_1.5e_640_ext_15ep_best_fold0.pth"
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 5000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 5000
-          initialDelaySeconds: 10
-          periodSeconds: 20
+        # readinessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: 5000
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10
+        # livenessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: 5000
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 20
         resources:
           limits:
             memory: "512Mi"
