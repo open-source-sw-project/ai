@@ -23,6 +23,26 @@ jobs:
           file: ./flask/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/handoc-flask:latest
+  test:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pytest flask
+      - name: Start Flask server
+        run: |
+          python ./flask/app.py &
+          sleep 5
+      - name: Run API tests
+        run: |
+          cd ./flask/test
+          python -m pytest ./test_api.py -v
 
   # test:
   #   needs: build-and-push
