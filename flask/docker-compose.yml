@@ -9,4 +9,5 @@ services:
     environment:
       - FLASK_ENV=development
     volumes:
-      - .:/flask # 로컬 디렉토리를 컨테이너에 마운트
+      - .:/flask
+      - ./models:/flask/models
