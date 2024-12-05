@@ -1,7 +1,8 @@
 #docker 사용법
 
-1. docker build -t 
-2. 로컬에서 테스트
+1. docker pull 2jay0/handoc-flask:latest
+2. docker build -t 
+3. 로컬에서 테스트
      - test폴더에 이미지를 저장
      - test_api.py 파일의 파일 경로 수정
      - python test_api.py 실행
