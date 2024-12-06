@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY model/efficientnet-b5-b6417697.pth /flask/models/
+COPY model/efficientnet-b5-b6417697.pth /flask/model/
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
