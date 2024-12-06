@@ -10,4 +10,4 @@ services:
       - FLASK_ENV=development
     volumes:
       - .:/flask
-      - ./models:/flask/models
+      - ./model:/flask/model
