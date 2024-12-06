@@ -21,14 +21,14 @@ spec:
         - containerPort: 5000
         volumeMounts:
         - name: model-volume
-          mountPath: /flask/models
+          mountPath: /flask/model
         env:
         - name: HOSTNAME
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
         - name: MODEL_PATH
-          value: "/flask/models/4c_b5ns_1.5e_640_ext_15ep_best_fold0.pth"
+          value: "/flask/model/4c_b5ns_1.5e_640_ext_15ep_best_fold0.pth"
         resources:
           limits:
             memory: "512Mi"
@@ -39,5 +39,5 @@ spec:
       volumes:
       - name: model-volume
         hostPath:
-          path: /flask/models
+          path: /flask/model
           type: DirectoryOrCreate
