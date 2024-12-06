@@ -2,7 +2,7 @@
 FROM python:3.9-slim
 
 # Set working directory
-WORKDIR /flask
+WORKDIR /app
 
 # Install system dependencies and clean up
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -10,7 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY model/efficientnet-b5-b6417697.pth /flask/model/
+# 모델 파일들을 먼저 복사
+COPY model/*.pth /app/model/
+
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -20,7 +22,7 @@ COPY . .
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
-    MODEL_PATH=/flask/model/4c_b5ns_1.5e_640_ext_15ep_best_fold0.pth
+    MODEL_PATH=/app/model/4c_b5ns_1.5e_640_ext_15ep_best_fold0.pth
 
 # Expose the application port
 EXPOSE 5000

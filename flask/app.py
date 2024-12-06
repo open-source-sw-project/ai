@@ -91,7 +91,7 @@ def predict():
 def load_model(model_path, device):
     try:
         # 1. 기본 efficientnet-b5 가중치 로드
-        base_weights = torch.load('/flask/model/efficientnet-b5-b6417697.pth', map_location=device, weights_only=True)
+        base_weights = torch.load('/app/model/efficientnet-b5-b6417697.pth', map_location=device, weights_only=True)
         model.model.load_state_dict(base_weights)
         
         # 2. 멜라노마 분류 가중치 로드
