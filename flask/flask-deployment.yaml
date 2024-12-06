@@ -33,3 +33,18 @@ spec:
           requests:
             memory: "256Mi"
             cpu: "250m"
+---            
+apiVersion: v1
+kind: Service
+metadata:
+  name: handoc-flask-service
+  labels:
+    app: handoc-flask
+spec:
+  type: NodePort
+  selector:
+    app: handoc-flask  # deployment의 라벨과 일치해야 합니다
+  ports:
+    - port: 5000        # 서비스의 포트
+      targetPort: 5000  # 컨테이너의 포트
+      nodePort: 30500   # 외부에서 접근할 포트 (30000-32767 범위)
