@@ -90,12 +90,7 @@ def predict():
 
 def load_model(model_path, device):
     try:
-        # 1. 기본 efficientnet-b5 가중치 로드
-        base_weights = torch.load('/app/model/efficientnet-b5-b6417697.pth', map_location=device, weights_only=True)
-        model.model.load_state_dict(base_weights)
-        
-        # 2. 멜라노마 분류 가중치 로드
-        custom_weights = torch.load(model_path, map_location=device)
+        custom_weights = torch.load(model_path, map_location=device, weights_only=True)
         model.load_state_dict(custom_weights, strict=False)
         
         model.to(device)
@@ -104,7 +99,7 @@ def load_model(model_path, device):
     except Exception as e:
         print(f"Error loading model: {e}")
         sys.exit(1)
-
+                
 if __name__ == '__main__':
     # 환경 변수에서 모델 경로 설정
     model_path = os.getenv('MODEL_PATH', './model/4c_b5ns_1.5e_640_ext_15ep_best_fold0.pth')
