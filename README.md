@@ -10,7 +10,7 @@
 
 #kubernetes 사용법(로컬 테스트용입니다.)
 1. minikube start
-2. kubectl apply -f flask-deployment.yaml (빌드타임 40분 소요)
+2. kubectl apply -f flask-deployment.yaml (빌드타임 약 40분 소요)
 3. minikube dashboard로 상태 확인 안되면 >> minikube addons enable dashboard 후 minikube dahsboard
 4. minikube service handoc-flask-service --url 명령으로 현재 제공 IP확인
 5. http:\\localhost:(확인된 포트번호)\health로 서버 동작상태 확인 가능
